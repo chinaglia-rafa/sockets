@@ -21,7 +21,7 @@ int main(int argc, char **argv)
       // "qualquer endereço que a rede especifique"
       .sin_addr.s_addr = htonl(INADDR_ANY),
       // duh
-      .sin_port = htons(6660),
+      .sin_port = htons(8080),
   };
   // Outra struct do tipo sockaddr_in para ser usada na recepção de dados
   struct sockaddr_in caddr;
