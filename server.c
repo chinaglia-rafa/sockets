@@ -33,6 +33,9 @@ int main(int argc, char **argv)
   int csize = sizeof caddr;
   char buffer[129];
 
+  printf("[hacked by chinaglia] Quick Simple Socket Server \x1b[33mFOR LINUX\x1b[37m 0.1\n");
+  printf("\x1b[32m Starting server...\x1b[37m \n");
+
   // Instanciando o socket em si, lembrando que instanciar um socket não é a mesma coisa de publicar ele em rede
   // ou deixá-lo ativo para conexões. Aqui a gente só está definindo como ele deverá se comportar quando as
   // outras partes estiverem em seus lugares.
@@ -43,14 +46,19 @@ int main(int argc, char **argv)
   // - 0 é usado para identificar que não queremos forçar um tipo de protocolo, mas sim usar o que é ditado
   //     pelos outros parâmetros.
   int server = socket(AF_INET, SOCK_STREAM, 0);
+
+  printf("\x1b[32m Binding to port 6660! \x1b[37m \n");
   // Agora sim a gente tá fazendo um bind() do socket que a gente criou pra poder usar os comandos de receber
   // e enviar mensagens via rede.
   bind(server, (struct sockaddr *)&saddr, sizeof saddr);
+
+  printf("\x1b[32m Ready to start listeing to up to 2 connections... \x1b[37m \n");
 
   // A função listen PREPARA (mas não ativamente escuta) o socket para conexões, e o segundo parâmetro diz
   // quantas eu posso ter ao mesmo tempo.
   listen(server, 2);
 
+  printf("\x1b[32m Socket server started. \x1b[37m \n");
   while (1)
   {
     // Agora sim a gente tem uma conexão com o cliente.
