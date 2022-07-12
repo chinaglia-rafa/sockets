@@ -8,6 +8,7 @@
 
 #define PORT 8080
 #define INPUT_LENGTH 140
+#define SEPARATOR " "
 
 /**
  * Aprendendo a usar sockets usando https://www.youtube.com/watch?v=GaxjJvMnz-I&ab_channel=LuizFelipe como
@@ -70,14 +71,23 @@ int main(int argc, char **argv)
   listen(server, 2);
 
   printf("\x1b[32mSocket server started. \x1b[0m \n");
+  // nome do usuário em sessão;
+  char username[30];
   while (1)
   {
     // Agora sim a gente tem uma conexão com o cliente.
     client = accept(server, (struct sockaddr *)&caddr, &csize);
-    if (client >= 0)
+    if (client <= 0)
+    {
+      printf("\x1b[32mConnection failed. Something went wrong.\x1b[0m \n");
+      continue;
+    }
+    else
       printf("\x1b[32mNew connection stabilished with ID %d. \x1b[0m \n", client);
+
+    send(client, "[200] Hello! Identify yourself with USER <username>.", strlen("[200] Hello! Identify yourself with USER <username>."), 0);
     strcpy(buffer, "...");
-    while (strcmp(buffer, "quit") != 0)
+    while (strcmp(buffer, "QUIT") != 0)
     {
       // A função recv() vai receber dados do socket e guardar em buffer, e retornar o tamanaho dos dados que
       // recebeu do cliente. O terceiro parâmetro diz qual o tamanho máximo que ela pode receber.
@@ -86,14 +96,55 @@ int main(int argc, char **argv)
       // caso o cliente tenha sido fechado sem aviso prévio.
       if (recvsize <= 0)
       {
-        printf("\x1b[32mConnection with ID %d failed. Disconnecting... \x1b[0m \n", client);
+        printf("\x1b[32m[301] Connection with ID %d failed. Disconnecting... \x1b[0m \n", client);
         // Sai do loop de comunicação e volta a esperar uma conexão em accept()
         break;
       }
       if (debug)
         printf("\x1b[37m[debug] Data received:\x1b[0m \x1b[33m\"%s\"\x1b[0m\n", buffer);
-      // A função send() envia dados pro cliente, simples assim.
-      send(client, buffer, recvsize, 0);
+
+      char *backupbuffer = malloc(strlen(buffer));
+      strcpy(backupbuffer, buffer);
+
+      // PROCESSA O COMANDO RECEBIDO
+      // Isso vai ficar bem bagunçado bem rápido, mas o tempo não permite muita estética no código-fonte
+      // no momento.
+      char *token;
+      token = strtok(buffer, SEPARATOR);
+      if (strcmp(token, "USER") == 0)
+      {
+        char *user;
+        user = strtok(NULL, SEPARATOR);
+        if (debug)
+          printf("\x1b[37m[debug] Param #01 is:\x1b[0m \x1b[33m\"%s\"\x1b[0m\n", user);
+        strcpy(username, user);
+        printf("\x1b[32m[200] Username set to %s.\x1b[0m\n", username);
+        char *res = malloc(strlen("[200] New username set. Hello .") + strlen(username));
+        strcpy(res, "[200] New username set. Hello ");
+        strcat(res, username);
+        strcat(res, ".");
+        // A função send() envia dados pro cliente, simples assim.
+        send(client, res, strlen(res), 0);
+      }
+      else if (strcmp(token, "HELP") == 0)
+      {
+        char *res = "HELP - shows help screen\nUSER <username> - changes username\nSAY <text> - Broadcasts text\nQUIT - Closes connection with client\n";
+        send(client, res, strlen(res), 0);
+      }
+      else if (strcmp(token, "SAY") == 0)
+      {
+        send(client, backupbuffer, strlen(backupbuffer), 0);
+      }
+      else if (strcmp(token, "QUIT") == 0)
+      {
+        send(client, "[200] Closing connection. Bye!", strlen("[200] Closing connection. Bye!"), 0);
+      }
+      else
+      {
+        send(client, "[300] Command unknown. Try again.", strlen("[300] Command unknown. Try again."), 0);
+      }
+
+      // send(client, buffer, recvsize, 0);
       fflush(stdout);
     }
     printf("\x1b[32mConnection with ID %d is now closed. \x1b[0m\n", client);
